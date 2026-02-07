@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Για σένα, Παναγιούλα μου❤️</title>
+
+  <!-- Confetti library -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root {
+      --bg1: #ffd6e7;
+      --bg2: #ffeef6;
+      --card: #ffffffcc;
+      --yes: #ff3b7a;
+      --yesHover: #ff1f68;
+
+      --imgFrame: rgba(255, 255, 255, 0.55);
+      --imgBorder: rgba(0, 0, 0, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at top, var(--bg2), var(--bg1));
+      font-family: system-ui, sans-serif;
+
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 16px 16px 40px;
+    }
+
+    #confettiCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    .card {
+      width: min(760px, 94vw);
+      padding: 26px 22px;
+      background: var(--card);
+      backdrop-filter: blur(10px);
+      border-radius: 22px;
+      text-align: center;
+      box-shadow: 0 18px 60px rgba(0,0,0,.15);
+    }
+
+    .art {
+      width: min(420px, 85vw);
+      height: clamp(200px, 42vw, 320px);
+      margin: 0 auto 12px;
+      display: block;
+
+      object-fit: contain;
+      object-position: center;
+
+      background: var(--imgFrame);
+      border: 1px solid var(--imgBorder);
+      border-radius: 18px;
+
+      box-shadow: 0 12px 22px rgba(0,0,0,.12);
+    }
+
+    h1 {
+      font-size: clamp(26px, 4vw, 44px);
+      margin: 12px 0 10px;
+    }
+
+    .button-zone {
+      position: relative;
+      width: min(520px, 92%);
+      height: 150px;
+      margin: 0 auto;
+      touch-action: none;
+    }
+
+    button.choice {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 16px 24px;
+      font-size: 18px;
+      font-weight: 800;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(0,0,0,.14);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform .12s ease, background .12s ease;
+    }
+
+    #yesBtn {
+      left: 18%;
+      background: var(--yes);
+      color: #fff;
+    }
+    #yesBtn:hover { background: var(--yesHover); }
+
+    #noBtn {
+      left: 62%;
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .hint {
+      margin-top: 10px;
+      font-size: 13px;
+      opacity: .7;
+    }
+
+    .result {
+      display: none;
+      margin-top: 18px;
+      animation: pop .35s ease;
+    }
+
+    .caption {
+      font-size: clamp(22px, 3.5vw, 34px);
+      margin: 10px 0 12px;
+      font-weight: 900;
+    }
+
+    /* ✅ SLIDESHOW ROW: ALWAYS LEFT/RIGHT */
+    .slide-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+
+      /* CRITICAL: never wrap, never stack */
+      flex-wrap: nowrap;
+      white-space: nowrap;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    /* Arrow buttons */
+    .arrow {
+      width: 56px;
+      height: 56px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: #ffffff;
+      box-shadow: 0 12px 24px rgba(0,0,0,.14);
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+      font-weight: 900;
+      transition: transform .12s ease;
+      flex: 0 0 auto;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .arrow:hover { transform: translateY(-1px); }
+    .arrow:active { transform: translateY(1px) scale(.98); }
+
+    /* Image must be allowed to shrink between arrows */
+    .fireworks {
+      flex: 1 1 0;        /* ✅ key: shrinkable */
+      min-width: 0;       /* ✅ key: prevent overflow pushing arrows */
+      width: 100%;
+      height: clamp(240px, 50vw, 420px);
+
+      object-fit: contain;
+      object-position: center;
+
+      background: var(--imgFrame);
+      border: 1px solid var(--imgBorder);
+      border-radius: 18px;
+
+      display: block;
+      box-shadow: 0 12px 22px rgba(0,0,0,.12);
+    }
+
+    .dots {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.18);
+    }
+
+    .dot.active {
+      background: rgba(0,0,0,.55);
+      width: 18px;
+    }
+
+    /* ✅ Mobile: shrink arrows + reduce gap so everything fits in one row */
+    @media (max-width: 520px) {
+      .slide-row { gap: 6px; }
+      .arrow {
+        width: 42px;
+        height: 42px;
+        font-size: 18px;
+      }
+      .fireworks {
+        height: clamp(210px, 55vw, 340px);
+      }
+      .card { padding: 22px 16px; }
+    }
+
+    @keyframes pop {
+      from { transform: scale(.96); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="confettiCanvas"></canvas>
+
+  <main class="card">
+    <img class="art" src="images/Istanbul.jpg" alt="Valentine image" />
+
+    <h1>Θά με συγχωρέσεις ποτέ ?😭 <h1>
+
+    <section class="button-zone" id="zone">
+      <button class="choice" id="yesBtn">Yes</button>
+      <button class="choice" id="noBtn">No</button>
+    </section>
+
+    <div class="hint" id="hint">Ειιιι δεν κάνει όχι κακό γατί 😈</div>
+
+    <section class="result" id="result">
+      <div class="caption" id="caption">Αλήθεια 🥹</div>
+
+      <!-- ✅ arrows directly in the row (no wrappers) -->
+      <div class="slide-row">
+        <button class="arrow" id="prevBtn" type="button" aria-label="Previous">◀</button>
+
+        <img class="fireworks" id="slideImg" src="images/1.jpg" alt="Slide image" />
+
+        <button class="arrow" id="nextBtn" type="button" aria-label="Next">▶</button>
+      </div>
+
+      <div class="dots" id="dots"></div>
+    </section>
+  </main>
+
+  <script>
+    // ---------- ENTRY GATE ----------
+    const params = new URLSearchParams(window.location.search);
+    const okFromQuery = params.get("ok") === "1";
+    const okFromStorage = sessionStorage.getItem("valentine_ok") === "1";
+
+    if (okFromQuery) {
+      sessionStorage.setItem("valentine_ok", "1");
+      history.replaceState({}, "", "valentine.html");
+    }
+    if (!okFromStorage && !okFromQuery) {
+      window.location.replace("index.html");
+    }
+
+    const zone = document.getElementById("zone");
+    const yesBtn = document.getElementById("yesBtn");
+    const noBtn = document.getElementById("noBtn");
+    const result = document.getElementById("result");
+    const hint = document.getElementById("hint");
+
+    // Slideshow elements
+    const captionEl = document.getElementById("caption");
+    const slideImg = document.getElementById("slideImg");
+    const nextBtn = document.getElementById("nextBtn");
+    const prevBtn = document.getElementById("prevBtn");
+    const dotsEl = document.getElementById("dots");
+
+    const slides = [
+      { text: "Αλήθεια 🥺?", img: "images/1.jpg" },
+      { text: "Συγνώμη για ότι είπα και έκανα", img: "images/sorry.jpg" },
+      { text: "Να κάνουμε πολλά ταξίδια μαζί ✈️", img: "images/trip.jpg" },
+      
+      { text: "Το πιο όμορφο χαμόγελο 😍", img: "images/smile.jpg" },
+      { text: "Σε θέλω δίπλα μου ❤️", img: "images/2.jpg" },
+    ];
+
+    let slideIndex = 0;
+
+    function renderDots() {
+      dotsEl.innerHTML = "";
+      slides.forEach((_, i) => {
+        const d = document.createElement("div");
+        d.className = "dot" + (i === slideIndex ? " active" : "");
+        dotsEl.appendChild(d);
+      });
+    }
+
+    function showSlide(i) {
+      slideIndex = (i + slides.length) % slides.length;
+      captionEl.textContent = slides[slideIndex].text;
+      slideImg.src = slides[slideIndex].img;
+      renderDots();
+    }
+
+    nextBtn.addEventListener("click", () => showSlide(slideIndex + 1));
+    prevBtn.addEventListener("click", () => showSlide(slideIndex - 1));
+
+    /* ---------- CONFETTI ---------- */
+    const confettiCanvas = document.getElementById("confettiCanvas");
+
+    function resizeConfettiCanvas() {
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      confettiCanvas.width = Math.floor(window.innerWidth * dpr);
+      confettiCanvas.height = Math.floor(window.innerHeight * dpr);
+      confettiCanvas.style.width = "100vw";
+      confettiCanvas.style.height = "100vh";
+    }
+
+    resizeConfettiCanvas();
+    window.addEventListener("resize", resizeConfettiCanvas);
+    window.addEventListener("orientationchange", () => setTimeout(resizeConfettiCanvas, 150));
+
+    const confettiInstance = confetti.create(confettiCanvas, {
+      resize: false,
+      useWorker: true
+    });
+
+    function fullScreenConfetti() {
+      const end = Date.now() + 1600;
+
+      (function frame() {
+        confettiInstance({
+          particleCount: 12,
+          spread: 90,
+          startVelocity: 45,
+          ticks: 180,
+          origin: { x: Math.random(), y: Math.random() * 0.3 }
+        });
+        if (Date.now() < end) requestAnimationFrame(frame);
+      })();
+
+      setTimeout(() => {
+        confettiInstance({
+          particleCount: 300,
+          spread: 140,
+          startVelocity: 60,
+          ticks: 220,
+          origin: { x: 0.5, y: 0.55 }
+        });
+      }, 300);
+    }
+
+    /* ---------- YES BUTTON GROWS ---------- */
+    let yesScale = 1;
+    function growYes() {
+      yesScale = Math.min(2.2, yesScale + 0.1);
+      yesBtn.style.transform = `translateY(-50%) scale(${yesScale})`;
+    }
+
+    /* ---------- NO BUTTON RUNS AWAY ---------- */
+    function clamp(n, min, max) {
+      return Math.max(min, Math.min(max, n));
+    }
+
+    function moveNo(px, py) {
+      const z = zone.getBoundingClientRect();
+      const b = noBtn.getBoundingClientRect();
+
+      let dx = (b.left + b.width / 2) - px;
+      let dy = (b.top + b.height / 2) - py;
+      let mag = Math.hypot(dx, dy) || 1;
+      dx /= mag;
+      dy /= mag;
+
+      let newLeft = (b.left - z.left) + dx * 150;
+      let newTop  = (b.top - z.top) + dy * 150;
+
+      newLeft = clamp(newLeft, 0, z.width - b.width);
+      newTop  = clamp(newTop, 0, z.height - b.height);
+
+      noBtn.style.left = newLeft + "px";
+      noBtn.style.top = newTop + "px";
+      noBtn.style.transform = "none";
+
+      growYes();
+    }
+
+    zone.addEventListener("pointermove", e => {
+      const b = noBtn.getBoundingClientRect();
+      const d = Math.hypot(
+        (b.left + b.width / 2) - e.clientX,
+        (b.top + b.height / 2) - e.clientY
+      );
+      if (d < 140) moveNo(e.clientX, e.clientY);
+    });
+
+    noBtn.addEventListener("click", e => e.preventDefault());
+
+    /* ---------- YES CLICK ---------- */
+    yesBtn.addEventListener("click", () => {
+      zone.style.display = "none";
+      hint.style.display = "none";
+      result.style.display = "block";
+
+      showSlide(0);
+
+      resizeConfettiCanvas();
+      fullScreenConfetti();
+
+      setTimeout(() => {
+        result.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    });
+  </script>
+</body>
+</html>
