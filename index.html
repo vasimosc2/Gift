@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Enter Password</title>
+
+  <style>
+    :root {
+      --bg1: #ffd6e7;
+      --bg2: #ffeef6;
+      --card: #ffffffcc;
+      --accent: #ff3b7a;
+      --accentHover: #ff1f68;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at top, var(--bg2), var(--bg1));
+      font-family: system-ui, sans-serif;
+      overflow: hidden;
+      padding: 16px;
+    }
+
+    .card {
+      width: min(520px, 92vw);
+      padding: 26px 22px;
+      background: var(--card);
+      backdrop-filter: blur(10px);
+      border-radius: 22px;
+      text-align: center;
+      box-shadow: 0 18px 60px rgba(0,0,0,.15);
+    }
+
+    h1 {
+      font-size: clamp(24px, 3.6vw, 34px);
+      margin: 8px 0 14px;
+    }
+
+    p {
+      margin: 0 0 16px;
+      opacity: .75;
+    }
+
+    .row {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(0,0,0,.12);
+      font-size: 16px;
+      outline: none;
+    }
+
+    button {
+      padding: 14px 16px;
+      border-radius: 999px;
+      border: none;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 10px 24px rgba(0,0,0,.14);
+      transition: transform .12s ease, background .12s ease;
+    }
+
+    button:hover { background: var(--accentHover); }
+    button:active { transform: scale(.98); }
+
+    .error {
+      display: none;
+      margin-top: 10px;
+      color: #b91c1c;
+      font-weight: 700;
+    }
+
+    .tiny {
+      margin-top: 14px;
+      font-size: 12px;
+      opacity: .6;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="card">
+    <h1>🔒 Password</h1>
+    <p>Enter the secret code to continue</p>
+
+    <div class="row">
+      <input id="pw" type="password" placeholder="Password..." autocomplete="off" />
+      <button id="go">Enter</button>
+    </div>
+
+    <div class="error" id="err">Wrong password 😈</div>
+    <div class="tiny">Hint: it’s a 4-digit number</div>
+  </main>
+
+  <script>
+    const pw = document.getElementById("pw");
+    const go = document.getElementById("go");
+    const err = document.getElementById("err");
+
+    const CORRECT = "2525";
+    const TARGET_PAGE = "valentine.html";
+
+    function check() {
+      if (pw.value === CORRECT) {
+        err.style.display = "none";
+        // Remember for this browser session so valentine.html can verify
+        sessionStorage.setItem("valentine_ok", "1");
+        window.location.href = TARGET_PAGE + "?ok=1";
+      } else {
+        err.style.display = "block";
+        pw.focus();
+        pw.select();
+      }
+    }
+
+    go.addEventListener("click", check);
+    pw.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") check();
+    });
+  </script>
+</body>
+</html>
